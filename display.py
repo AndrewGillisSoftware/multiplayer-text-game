@@ -1,7 +1,7 @@
 import os
 
 EMPTY_CHARACTER = "."
-DISPLAY_ROWS, DISPLAY_COLS = (24, 40)
+DISPLAY_ROWS, DISPLAY_COLS = (18,64)
 
 # Correctly initialize the display matrix with separate lists for each row
 display = [[EMPTY_CHARACTER] * DISPLAY_COLS for _ in range(DISPLAY_ROWS)]
@@ -10,7 +10,7 @@ def print_display():
     cls()
     for row in display:
         for character in row:
-            print(str(character) + " ", end="")
+            print(str(character) + "", end="")
         print()
 
 def cls():
