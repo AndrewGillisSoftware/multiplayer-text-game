@@ -1,11 +1,10 @@
 import socket
 import threading
 import datetime
-import pickle
-from commands.command_parser import *
+import json
 
 HEADER_BYTES = 64
-PORT = 5050
+PORT = 5051
 FORMAT = 'utf-8'
 EMPTY_PARCEL = "!NETWORK_TRANSPORT_EMPTY!"
 DISCONNECT_MESSAGE = "!NETWORK_TRANSPORT_DISCONNECTED!" # Payload has a very low chance to look like this
@@ -30,7 +29,7 @@ class MailParcel:
         return cls(**data)
 
     def __repr__(self):
-        return f"MailParcel(from_address={self.from_address}, to_address={self.to_address}, message={self.message})"
+        return json.dumps(self.to_dict()) #f"MailParcel(from_address={self.from_address}, to_address={self.to_address}, message={self.message})"
 
 class MailBox:
     box = []
@@ -51,9 +50,9 @@ class MailBox:
 
         return self.box.pop()
     
-def __send_proto(conn, msg):
+def send_proto(conn, msg):
     # Encode Message
-    message = msg.encode(FORMAT)
+    message = str(msg).encode(FORMAT)
 
     # Encode Message Length
     msg_length = len(message)
@@ -66,7 +65,7 @@ def __send_proto(conn, msg):
     # Send Message
     conn.send(message)
 
-def __recv_proto(conn) -> str:
+def recv_proto(conn) -> str:
     # Get Message Length
     msg_length = conn.recv(HEADER_BYTES).decode(FORMAT)
     if msg_length:
@@ -79,10 +78,14 @@ def __recv_proto(conn) -> str:
     return None
 
 class ClientTransport:
-    def __init__(self, server_address, handle_server):
-        self.server_address = server_address
+    def __init__(self, handle_server):
+        self.server_address = None
         self.client_address = socket.gethostbyname(socket.gethostname())
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        return
+    
+    def connect(self, server_address):
+        self.server_address = server_address
         self.client.connect((server_address, PORT))
         return
 
@@ -91,9 +94,9 @@ class ClientTransport:
         # Create Parcel
         parcel = MailParcel(self.client_address, to_address, string_message)
 
-        __send_proto(self.client, parcel)
+        send_proto(self.client, parcel)
 
-        return __recv_proto(self.client)
+        return recv_proto(self.client)
 
     def disconnect(self):
         self.send_parcel_and_get_response(self.server_address, DISCONNECT_MESSAGE)
@@ -142,11 +145,12 @@ class ServerTransport:
         connected = True
         while connected:
             # Get Client Message
-            client_message = __recv_proto(conn)
+            client_message = recv_proto(conn)
 
             # Client Sent a Message
             if client_message:
-                if client_message == DISCONNECT_MESSAGE:
+                client_message_parcel = MailParcel.from_dict(json.loads(client_message))
+                if DISCONNECT_MESSAGE == client_message_parcel.message:
                     connected = False
 
                 print(f"[{addr}] {client_message}")
@@ -159,7 +163,7 @@ class ServerTransport:
             box = self.__get_mailbox(addr)
             next_parcel_for_client = box.get_next_parcel()
             print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
-            self.__send_proto(conn, next_parcel_for_client)
+            send_proto(conn, next_parcel_for_client)
         
         self.__deregister_client(addr)
         conn.close()

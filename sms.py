@@ -10,7 +10,7 @@ sms_parser.add_argument('to', type=str, help = 'Name of person to send message t
 sms_parser.add_argument('message', type=str, help = 'The message to send')
 
 # Once parser is selected and disassembled what happens
-def handle_sms(input_args):
+def handle_sms(client_transport, input_args):
     try:
         arguments = sms_parser.parse_args(input_args)
     except argparse.ArgumentTypeError as e:

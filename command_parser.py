@@ -15,7 +15,7 @@ command_handlers = {}
 def add_command(command_str, handling_function):
     command_handlers[command_str] = handling_function
 
-def parse(raw_command):
+def parse(client, raw_command):
     input_args = shlex.split(raw_command)
 
     try:
@@ -26,6 +26,6 @@ def parse(raw_command):
     
     # Call Command handler
     try:
-        command_handlers[general_args.command](input_args)
+        command_handlers[general_args.command](client, input_args)
     except KeyError:
         print("Invalid command. try /help")

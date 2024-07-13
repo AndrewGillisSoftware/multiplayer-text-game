@@ -8,7 +8,7 @@ disconnect_parser = argparse.ArgumentParser(description="")
 disconnect_parser.add_argument('command', type=str, help = '')
 
 # Once parser is selected and disassembled what happens
-def handle_disconnect(input_args):
+def handle_disconnect(client_transport, input_args):
     try:
         arguments = disconnect_parser.parse_args(input_args)
     except argparse.ArgumentTypeError as e:
@@ -17,3 +17,4 @@ def handle_disconnect(input_args):
 
     # Do whatever
     print("Disconnecting")
+    client_transport.disconnect()
