@@ -16,12 +16,13 @@ class ShipLocation:
 
 class Game:
     # PlayerID entries need to have a name property!
-    def __init__(self, startingShipIntegrity, playerIDs):
+    def __init__(self, startingShipIntegrity):
         self.shipIntegrity = startingShipIntegrity
         self.gameLoopCount = 0
         self.crewMembers = []
-        for pID in playerIDs:
-            self.crewMembers.append(CrewMember(playerIDs.name))
+
+    def addPlayer(self, playerID):
+        self.crewMembers.append(CrewMember(playerID))
 
     def update(self):
         pass
