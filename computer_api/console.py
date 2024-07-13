@@ -1,4 +1,4 @@
-from display import *
+from computer_api.display import *
 CURSOR = ">"
 
 def set_cursor():

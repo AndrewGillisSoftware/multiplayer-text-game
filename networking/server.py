@@ -1,4 +1,4 @@
-from comm_utils import *
+from networking.comm_utils import *
 
 st = ServerTransport(None)
 

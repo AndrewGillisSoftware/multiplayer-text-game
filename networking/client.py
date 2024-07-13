@@ -1,4 +1,4 @@
-from comm_utils import *
+from networking.comm_utils import *
 from commands.command_parser import *
 
 SERVER = "192.168.99.41"
