@@ -3,6 +3,8 @@ import shlex
 
 from sms import *
 from help import *
+from connect import *
+from disconnect import *
 
 general_parser = argparse.ArgumentParser(description="general")
 general_parser.add_argument('command', type = str, help='')
@@ -23,4 +25,7 @@ def parse(raw_command):
         return
     
     # Call Command handler
-    command_handlers[general_args.command](input_args)
+    try:
+        command_handlers[general_args.command](input_args)
+    except KeyError:
+        print("Invalid command. try /help")
