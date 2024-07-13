@@ -1,5 +1,5 @@
 from comm_utils import *
-from shared_classes import *
+from commands.command_parser import *
 
 SERVER = "192.168.99.41"
 IP = socket.gethostbyname(socket.gethostname())

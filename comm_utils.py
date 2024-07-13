@@ -2,7 +2,7 @@ import socket
 import threading
 import datetime
 import pickle
-from shared_classes import *
+from commands.command_parser import *
 
 HEADER_BYTES = 64
 PORT = 5050
@@ -18,8 +18,19 @@ class MailParcel:
         self.message = message
         return
     
-    def get_message(self):
-        return pickle.loads(self.message)
+    def to_dict(self):
+        return {
+            'from_address': self.from_address,
+            'to_address': self.to_address,
+            'message': self.message
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
+
+    def __repr__(self):
+        return f"MailParcel(from_address={self.from_address}, to_address={self.to_address}, message={self.message})"
 
 class MailBox:
     box = []
@@ -39,6 +50,33 @@ class MailBox:
             return MailParcel(self.server_address, self.address, EMPTY_PARCEL)
 
         return self.box.pop()
+    
+def __send_proto(conn, msg):
+    # Encode Message
+    message = msg.encode(FORMAT)
+
+    # Encode Message Length
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b' ' * (HEADER_BYTES - len(send_length))
+    
+    # Send Message Length
+    conn.send(send_length)
+    
+    # Send Message
+    conn.send(message)
+
+def __recv_proto(conn) -> str:
+    # Get Message Length
+    msg_length = conn.recv(HEADER_BYTES).decode(FORMAT)
+    if msg_length:
+        # Convert Message Length
+        msg_length = int(msg_length)
+
+        # Convert Message
+        msg = conn.recv(msg_length).decode(FORMAT)
+        return msg
+    return None
 
 class ClientTransport:
     def __init__(self, server_address, handle_server):
@@ -49,59 +87,16 @@ class ClientTransport:
         return
 
     # If IP is server the message is for the server
-    def send_parcel_and_get_response(self, to_address, any_object) -> MailParcel:
+    def send_parcel_and_get_response(self, to_address, string_message) -> MailParcel:
         # Create Parcel
-        parcel = MailParcel(self.client_address, to_address, pickle.dumps(any_object))
+        parcel = MailParcel(self.client_address, to_address, string_message)
 
-        # Pickle Parcel
-        pickled_parcel = pickle.dumps(parcel)
+        __send_proto(self.client, parcel)
 
-        # Get Size of Pickle Parcel
-        pickle_parcel_length = len(pickled_parcel)
-
-        # Send Pickle Parcel Length
-        pickle_parcel_length_payload = str(pickle_parcel_length).encode(FORMAT)
-        pickle_parcel_length_payload += b' ' * (HEADER_BYTES - len(pickle_parcel_length_payload))
-        self.sendall(pickle_parcel_length_payload)
-
-        # Send Pickle Parcel
-        self.sendall(pickled_parcel)
-
-        # Get Par
-
-
-    """
-    def send(self, msg):
-        # Send
-        message = msg.encode(FORMAT)
-        msg_length = len(message)
-        send_length = str(msg_length).encode(FORMAT)
-        send_length += b' ' * (HEADER_BYTES - len(send_length))
-        self.client.send(send_length)
-        self.client.send(message)
-
-        # Response
-
-        # Get addr_length payload
-        addr_length = self.client.recv(HEADER_BYTES).decode(FORMAT)
-        addr_length = int(addr_length)
-
-        # Get Address
-        addr = self.client.recv(addr_length).decode(FORMAT)
-
-        # Get msg_length of payload
-        msg_length = self.client.recv(HEADER_BYTES).decode(FORMAT)
-        msg_length = int(msg_length)
-
-        # Get response message
-        response = self.client.recv(msg_length).decode(FORMAT)
-    
-        print(f"[Received Parcel of Mail from {addr}] {response}")
-        return response
-    """
+        return __recv_proto(self.client)
 
     def disconnect(self):
-        self.send_parcel_and_get_response(self.server_address, ParcelDisconnect)
+        self.send_parcel_and_get_response(self.server_address, DISCONNECT_MESSAGE)
         return
 
 class ServerTransport:
@@ -128,8 +123,8 @@ class ServerTransport:
         if box:
             return
         # Add client to list of active clients by creating a mailbox
-        # self.address = Server Address
-        self.mail_boxes.append(MailBox(self.address, address))
+        server_address = self.address
+        self.mail_boxes.append(MailBox(server_address, address))
         return
 
     def __deregister_client(self, address):
@@ -138,14 +133,6 @@ class ServerTransport:
         if box:
             self.mail_boxes.remove(box)
         return
-    
-    def __send_to_client_proto(self, conn, msg):
-        message = msg.encode(FORMAT)
-        msg_length = len(message)
-        send_length = str(msg_length).encode(FORMAT)
-        send_length += b' ' * (HEADER_BYTES - len(send_length))
-        conn.send(send_length)
-        conn.send(message)
 
     def __handle_client_proto(self, conn, addr):
         print(f"[NEW CONNECTION] {addr} connected.")
@@ -154,28 +141,25 @@ class ServerTransport:
     
         connected = True
         while connected:
-            msg_length = conn.recv(HEADER_BYTES).decode(FORMAT)
-            if msg_length:
-                # Get msg_length payload
-                msg_length = int(msg_length)
-                msg = conn.recv(msg_length).decode(FORMAT)
-                if msg == DISCONNECT_MESSAGE:
+            # Get Client Message
+            client_message = __recv_proto(conn)
+
+            # Client Sent a Message
+            if client_message:
+                if client_message == DISCONNECT_MESSAGE:
                     connected = False
-                
-                print(f"[{addr}] {msg}")
 
-                # Server reacts to clients hook
+                print(f"[{addr}] {client_message}")
+
+                # Server reacts to client
                 if self.handle_client != None:
-                    self.handle_client(msg)
-
-                # Send address
-                self.__send_to_client_proto(conn, addr)
-                
-                # Send next parcel to client
-                box = self.__get_mailbox(addr)
-                next_parcel_for_client = box.get_next_parcel()
-                print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
-                self.__send_to_client_proto(conn, next_parcel_for_client)
+                    self.handle_client(client_message)
+            
+            # Send Client its mail
+            box = self.__get_mailbox(addr)
+            next_parcel_for_client = box.get_next_parcel()
+            print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
+            self.__send_proto(conn, next_parcel_for_client)
         
         self.__deregister_client(addr)
         conn.close()
