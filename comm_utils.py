@@ -49,7 +49,7 @@ class ClientTransport:
         return
 
     # If IP is server the message is for the server
-    def send_parcel(self, to_address, any_object) -> MailParcel:
+    def send_parcel_and_get_response(self, to_address, any_object) -> MailParcel:
         # Create Parcel
         parcel = MailParcel(self.client_address, to_address, pickle.dumps(any_object))
 
@@ -57,7 +57,17 @@ class ClientTransport:
         pickled_parcel = pickle.dumps(parcel)
 
         # Get Size of Pickle Parcel
-        
+        pickle_parcel_length = len(pickled_parcel)
+
+        # Send Pickle Parcel Length
+        pickle_parcel_length_payload = str(pickle_parcel_length).encode(FORMAT)
+        pickle_parcel_length_payload += b' ' * (HEADER_BYTES - len(pickle_parcel_length_payload))
+        self.sendall(pickle_parcel_length_payload)
+
+        # Send Pickle Parcel
+        self.sendall(pickled_parcel)
+
+        # Get Par
 
 
     """
@@ -91,7 +101,7 @@ class ClientTransport:
     """
 
     def disconnect(self):
-        self.send_parcel(self.server_address, ParcelDisconnect)
+        self.send_parcel_and_get_response(self.server_address, ParcelDisconnect)
         return
 
 class ServerTransport:

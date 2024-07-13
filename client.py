@@ -26,9 +26,9 @@ while True:
                     ip_to_send_to = parts[1]
                     message_to_send = parts[2]
                     sms = ParcelSmsString(str(IP), message_to_send)
-                    response = ct.send_parcel(ip_to_send_to, sms)
+                    response = ct.send_parcel_and_get_response(ip_to_send_to, sms)
         case "/ping":
-            response = ct.send_parcel(SERVER, ParcelPing())
+            response = ct.send_parcel_and_get_response(SERVER, ParcelPing())
                     
         case "/disconnect":
             ct.disconnect()
