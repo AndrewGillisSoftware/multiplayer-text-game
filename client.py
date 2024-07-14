@@ -2,7 +2,6 @@ from client_utils import *
 from comm_utils import *
 from init_commands import *
 import time
-import json
 
 #SERVER = "127.0.0.1"
 
@@ -19,10 +18,10 @@ def handle_server_mail(mail:MailParcel):
         mail_command = segmented_message[0]
 
         # Add list of IPS from the server to client information
-        if mail_command == GET_ACTIVE_CLIENTS_RESPONSE:
+        if mail_command == GET_ACTIVE_CLIENTS_RESPONSE[:-1]:
             mail_response = segmented_message[1]
             OTHER_CLIENT_IPS.clear()
-            OTHER_CLIENT_IPS.extend(json.loads(mail_response))
+            OTHER_CLIENT_IPS.extend(eval(mail_response))
             print(OTHER_CLIENT_IPS)
 
 def handle_client_to_client_mail(mail:MailParcel):
@@ -33,11 +32,11 @@ def handle_client_to_client_mail(mail:MailParcel):
         mail_command = segmented_message[0]
 
         # Request from a client to get this clients name sent back to it
-        if mail_command == GET_CLIENT_NAME:
+        if mail_command == GET_CLIENT_NAME[:-1]:
             # Send Name to the requesting address
             ct.send_parcel(mail.from_address, GET_CLIENT_NAME_RESPONSE + get_client_name())
         
-        elif mail_command == GET_CLIENT_NAME_RESPONSE:
+        elif mail_command == GET_CLIENT_NAME_RESPONSE[:-1]:
             # We recieved a response from our name request assign them to our table of known users
             mail_response = segmented_message[1]
             # Add to other clients
@@ -47,21 +46,28 @@ def handle_client_to_client_mail(mail:MailParcel):
         else:
             "Unknown client mail command"
 
-def block_on_condition(condition):
-    while condition:
-        pass
-
-def discover_other_clients(ct:ClientTransport):
+def discover_other_clients(ct):
+    discovering_ips = False
     while True:
         # Ensure connection
-        block_on_condition(not ct.connected)
+        if not ct.connected:
+            continue
+
         # Discover Ips
-        discover_other_client_ips(ct)
+        if not discovering_ips:
+            discover_other_client_ips(ct)
+            discovering_ips = True
+
         # Ensure Ips were grabbed
-        block_on_condition(len(OTHER_CLIENT_IPS) == 0)
+        if len(OTHER_CLIENT_IPS) == 0:
+            continue
+
+        print("Discovering Clients - GOT IPS")
         # Discover Names
         discover_other_client_names(ct)
+
         time.sleep(10)
+        discovering_ips = True
 
 def check_for_mail(ct):
     while True:
@@ -73,16 +79,13 @@ def check_for_mail(ct):
                 handle_client_to_client_mail(parcel)
                 print(parcel)
 
-def client_main_loop(ct):
-    # Start Checking for mail
-    check_for_mail_thread = threading.Thread(target=check_for_mail, args=(ct,))
-    check_for_mail_thread.start()
 
-    discover_other_clients_thread = threading.Thread(target=discover_other_clients, args=(ct,))
-    discover_other_clients_thread.start()
+# Start Checking for mail
+check_for_mail_thread = threading.Thread(target=check_for_mail, args=(ct,))
+check_for_mail_thread.start()
 
-thread = threading.Thread(target=client_main_loop, args=(ct,))
-thread.start()
+discover_other_clients_thread = threading.Thread(target=discover_other_clients, args=(ct,))
+discover_other_clients_thread.start()
 
 while True:
     user_input = input("Enter Command: ")
