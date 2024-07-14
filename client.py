@@ -21,7 +21,7 @@ def handle_server_mail(mail:MailParcel):
             mail_response = mail.message
             OTHER_CLIENT_IPS.clear()
             OTHER_CLIENT_IPS.extend(eval(mail_response))
-            print(OTHER_CLIENT_IPS)
+            #print(OTHER_CLIENT_IPS)
 
 def handle_client_to_client_mail(mail:MailParcel):
     # Client to Client Communication: Prevent a Infinite Loop
@@ -30,7 +30,7 @@ def handle_client_to_client_mail(mail:MailParcel):
         mail_command = mail.purpose
 
         # Request from a client to get this clients name sent back to it
-        print(mail_command)
+        #print(mail_command)
         if mail_command == GET_CLIENT_NAME:
             # Send Name to the requesting address
             ct.send_parcel(GET_CLIENT_NAME_RESPONSE, mail.from_address, get_client_name())
@@ -40,7 +40,9 @@ def handle_client_to_client_mail(mail:MailParcel):
             mail_response = mail.message
             # Add to other clients
             OTHER_CLIENT_NAME_TO_IP[mail_response] = mail.from_address
-            print(OTHER_CLIENT_NAME_TO_IP)
+            #print(OTHER_CLIENT_NAME_TO_IP)
+        elif mail_command == SMS_MSG:
+            print(f"{get_other_client_name(mail.from_address)}: {mail.message}")
         
         else:
             "Unknown client mail command"
@@ -61,7 +63,7 @@ def discover_other_clients(ct):
         if len(OTHER_CLIENT_IPS) == 0:
             continue
 
-        print("Discovering Clients - GOT IPS")
+        #print("Discovering Clients - GOT IPS")
         # Discover Names
         discover_other_client_names(ct)
 
@@ -76,7 +78,7 @@ def check_for_mail(ct):
             if parcel.purpose != EMPTY_PARCEL:
                 handle_server_mail(parcel)
                 handle_client_to_client_mail(parcel)
-                print(parcel)
+                #print(parcel)
 
 
 # Start Checking for mail

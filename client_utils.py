@@ -17,6 +17,13 @@ CLIENT_NAME = generate_random_client_name()
 def get_client_name():
     return CLIENT_NAME
 
+def get_other_client_name(ip):
+    other_clients = OTHER_CLIENT_NAME_TO_IP.items()
+    for client in other_clients:
+        if ip == client[1]:
+            return client[0]
+    return "Unknown"
+
 # Utility Functions
 def discover_other_client_ips(ct:ClientTransport):
     ct.send_parcel(GET_ACTIVE_CLIENTS, ct.server_address, "")
