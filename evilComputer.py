@@ -76,6 +76,8 @@ soundRefs = {
     "peter7" : "Petah/this-is-peter-griffin-101soundboards.mp3",
     "peter8" : "Petah/what-a-glorious-day-101soundboards.mp3",
     "peter9" : "Petah/when-im-when-im-in-a-restaurant-right.mp3",
+    "dragon1": "Dragonrar.mp3",
+    "dragon2": "Dragonrarr2.mp3",
 }
 
 
@@ -98,7 +100,8 @@ def main():
     scaleFactor, images = loadImages(imageRefs, initImagePositions, screenWidth)
     selectionZones = createSelectionZones(selectionZoneSetupData, scaleFactor)
     peterSoundNames = ["peter1", "peter2", "peter3", "peter4", "peter5", "peter6", "peter7", "peter8", "peter9"]
-    sounds = loadSounds(soundRefs, volume=0.5)
+    dragonSoundNames = ["dragon1", "dragon2"]
+    sounds = loadSounds(soundRefs, volume=1.0)
     scrollFont = pygame.font.Font(fontRef, 27)
     consoleFont = pygame.font.SysFont("Consolas", 18, bold=True)
 
@@ -138,9 +141,12 @@ def main():
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 quitRequest = checkImageClick(images["evilGoblin"], event.pos)
+                dragonClick = checkImageClick(images["dragon"], event.pos)
                 zone = checkSelectionZones(selectionZones, event.pos)
                 if quitRequest and not quillHeld:
                     running = False
+                elif dragonClick:
+                    sounds[dragonSoundNames[random.randrange(0, len(dragonSoundNames) - 1)]].play()
                 elif zone == "inkwell":
                     if quillHeld:
                         quillHeld = False
