@@ -3,7 +3,9 @@ from gameStructures import *
 import pygame
 import random
 
-aspectRatio = (16, 9)
+# Global interfaces
+linesToPrint = []
+commandQueue = []
 
 class ImageData:
     def __init__(self, surface, position, scaleFactor):
@@ -105,34 +107,12 @@ def main():
 
     # Console Setup
     consoleLineCount = 23
+    consoleLineLength = 50
+    scrollEditString = ""
+    scrollEditSurface = None
     consolePrintedLines = []
-    consoleActiveLine = None
     for i in range(consoleLineCount):
         consolePrintedLines.append(None)
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
-    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
-    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
 
     # Game State
     quillHeld = False
@@ -156,9 +136,23 @@ def main():
                         images["quill"].setCursorAttachment(True, (-25, -145))
                 elif zone == "fishHead" and quillHeld:
                     sounds[random.randrange(0, len(sounds) - 1)].play()
+            elif event.type == pygame.KEYDOWN and quillHeld:
+                if event.key == pygame.K_BACKSPACE:
+                    scrollEditString = scrollEditString[:-1]  # Remove last character on backspace
+                elif event.key == pygame.K_RETURN:
+                    appendScrollCommand(scrollEditString)
+                    # printToConsole(scrollEditString)
+                    scrollEditString = ""
+                elif len(scrollEditString) <= consoleLineLength:
+                    scrollEditString += event.unicode  # Add the pressed key to the string
+                scrollEditSurface = font.render(scrollEditString, True, "black")
+
+        # Look for new console outputs
+        while len(linesToPrint) != 0:
+            addConsolePrintedLine(consolePrintedLines, font, linesToPrint.pop(0))
 
         # Display update
-        frame = createFrame(images, consolePrintedLines, screenWidth, screenHeight)
+        frame = createFrame(images, consolePrintedLines, scrollEditSurface, screenWidth, screenHeight)
         drawSelectionZones(False, frame, selectionZones)  # Needs to happen after scaling!
         window.blit(frame, frame.get_rect())  # apply frame to window
         pygame.display.flip()  # flip() the display to put your work on screen
@@ -185,7 +179,7 @@ def loadImages(imgRefs, imgPositions, screenWidth):
     return scaleFactor, images
 
 
-def createFrame(images, consolePrintedLines, screenWidth, screenHeight):
+def createFrame(images, consolePrintedLines, scrollTextSurface, screenWidth, screenHeight):
     # Evil computer image dictates frame size
     frame = pygame.Surface((images["evilComputer"].surface.get_width(), images["evilComputer"].surface.get_height()))
     frame.fill("black")
@@ -193,10 +187,13 @@ def createFrame(images, consolePrintedLines, screenWidth, screenHeight):
     for img in images:
         if not images[img].isAttachedToCursor() and images[img].position is not None:
             frame.blit(images[img].surface, images[img].position)
-    # Blit text surface
+    # Blit console printed lines surface
     for i in range(len(consolePrintedLines)):
         if consolePrintedLines[i] is not None:
             frame.blit(consolePrintedLines[i], (670, 135 + i * 20))
+    # Blit editable scroll string
+    if scrollTextSurface is not None:
+        frame.blit(scrollTextSurface, (750, 900))
     # Scale frame
     scaledFrame = pygame.transform.scale(frame, (screenWidth, screenHeight))
     # Blit image(s) attached to cursor (need to be post scaling)
@@ -250,6 +247,16 @@ def addConsolePrintedLine(consolePrintedLines, font, text):
     consolePrintedLines.pop(0)
     # Append new line to list
     consolePrintedLines.append(line)
+
+
+# From gregtech backend
+def printToConsole(text):
+    linesToPrint.append(text)
+
+
+# To gregtech backend
+def appendScrollCommand(text):
+    commandQueue.append(text)
 
 
 # Call to main
