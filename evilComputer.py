@@ -49,14 +49,18 @@ imageRefs = {
     "quill"       : "Quillnoink.png",
     "evilGoblin"  : "evilGoblin.png",
     "pencilCup"   : "pencilCup.png",
-    "dragon"      : "dragon.png"
+    "dragon"      : "dragon.png",
+    "crystalBall" : "Crystal_Ball.png",
+    "candle"      : "Candle.png",
 }
 initImagePositions = {
     "evilComputer": (0, 0),
     "quill"       : (1272,805),
     "evilGoblin"  : (0,1050),
     "pencilCup"   : (550, 650),
-    "dragon"      : (0, 160)
+    "dragon"      : (0, 160),
+    "crystalBall" : (180, 775),
+    "candle"      : (1550, 725),
 }
 selectionZoneSetupData = {
     "inkwell" : (1262,950,62,53),
@@ -93,6 +97,7 @@ def main():
     # Prepare Assets
     scaleFactor, images = loadImages(imageRefs, initImagePositions, screenWidth)
     selectionZones = createSelectionZones(selectionZoneSetupData, scaleFactor)
+    peterSoundNames = ["peter1", "peter2", "peter3", "peter4", "peter5", "peter6", "peter7", "peter8", "peter9"]
     sounds = loadSounds(soundRefs, volume=0.5)
     scrollFont = pygame.font.Font(fontRef, 27)
     consoleFont = pygame.font.SysFont("Consolas", 18, bold=True)
@@ -144,7 +149,7 @@ def main():
                         quillHeld = True
                         images["quill"].setCursorAttachment(True, (-25, -145))
                 elif zone == "fishHead" and quillHeld:
-                    sounds[random.randrange(0, len(sounds) - 1)].play()
+                    sounds[peterSoundNames[random.randrange(0, len(peterSoundNames) - 1)]].play()
             elif event.type == pygame.KEYDOWN and quillHeld:
                 if event.key == pygame.K_BACKSPACE:
                     backspaceKeyHeld = True
@@ -258,11 +263,10 @@ def drawSelectionZones(debug, frame, selectionZones):
 
 
 def loadSounds(soundData, volume=1.0):
-    sounds = []
+    sounds = {}
     for sound in soundData:
-        newSound = pygame.mixer.Sound(soundData[sound])
-        newSound.set_volume(volume)
-        sounds.append(newSound)
+        sounds[sound] = pygame.mixer.Sound(soundData[sound])
+        sounds[sound].set_volume(volume)
     return sounds
 
 
