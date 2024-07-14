@@ -119,8 +119,8 @@ def main():
     backspaceKeyHeld = False
     continuousBackspace = False
     backspaceKeyHeldStartTime = 0
-    continuousBackspaceStartDelay = 500
-    continuousBackspaceCooldown = 100
+    continuousBackspaceStartDelay = 100
+    continuousBackspaceCooldown = 10
     continuousBackspaceLatestTime = 0
 
     # Game State
@@ -164,13 +164,15 @@ def main():
 
         # backspace goodener
         if backspaceKeyHeld:
-            if not continuousBackspace and pygame.time.get_ticks() - backspaceKeyHeldStartTime < continuousBackspaceStartDelay:
+            if not continuousBackspace and pygame.time.get_ticks() - backspaceKeyHeldStartTime > continuousBackspaceStartDelay:
                 continuousBackspace = True
                 continuousBackspaceLastTimestamp = pygame.time.get_ticks()
                 scrollEditString = scrollEditString[:-1]  # Remove last character on backspace
-            elif continuousBackspace and pygame.time.get_ticks() - continuousBackspaceLatestTime < continuousBackspaceCooldown:
+                scrollEditSurface = scrollFont.render(scrollEditString, True, "black")
+            elif continuousBackspace and pygame.time.get_ticks() - continuousBackspaceLatestTime > continuousBackspaceCooldown:
                 continuousBackspaceLatestTime = pygame.time.get_ticks()
                 scrollEditString = scrollEditString[:-1]  # Remove last character on backspace
+                scrollEditSurface = scrollFont.render(scrollEditString, True, "black")
 
         # Look for new console outputs
         while len(linesToPrint) != 0:
