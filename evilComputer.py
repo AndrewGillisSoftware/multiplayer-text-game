@@ -44,6 +44,7 @@ class SelectionZone:
         return scaledRect
 
 
+fontRef = "Kingthings_Trypewriter_2.ttf"
 imageRefs = {
     "evilComputer": "Main_Screen_Final.png",   # 16:9
     "quill"       : "Quillnoink.png",
@@ -75,6 +76,7 @@ def main():
     # Initialize Pygame
     pygame.init()
     pygame.mixer.init()  # for sounds
+    pygame.font.init()   # for font
 
     # Screen Size:
     infoObject = pygame.display.Info()
@@ -85,6 +87,8 @@ def main():
     scaleFactor, images = loadImages(imageRefs, initImagePositions, screenWidth)
     selectionZones = createSelectionZones(selectionZoneSetupData, scaleFactor)
     sounds = loadSounds(soundRefs, volume=0.5)
+    #font = pygame.font.Font(fontRef)
+    font = pygame.font.SysFont("Consolas", 18, bold=True)
 
     # Setup Cursor
     pygame.mouse.set_visible(True)
@@ -94,6 +98,37 @@ def main():
     clock = pygame.time.Clock()
     running = True
     dt = 0
+
+    # Console Setup
+    consoleLineCount = 23
+    consolePrintedLines = []
+    consoleActiveLine = None
+    for i in range(consoleLineCount):
+        consolePrintedLines.append(None)
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "testessttestes")
+    addConsolePrintedLine(consolePrintedLines, font, "asdfsdfesfasef")
+    addConsolePrintedLine(consolePrintedLines, font, "testeasfaefsfeasf ssttestes")
 
     # Game State
     quillHeld = False
@@ -119,7 +154,7 @@ def main():
                     sounds[random.randrange(0, len(sounds) - 1)].play()
 
         # Display update
-        frame = createFrame(images, screenWidth, screenHeight)
+        frame = createFrame(images, consolePrintedLines, screenWidth, screenHeight)
         drawSelectionZones(False, frame, selectionZones)  # Needs to happen after scaling!
         window.blit(frame, frame.get_rect())  # apply frame to window
         pygame.display.flip()  # flip() the display to put your work on screen
@@ -146,7 +181,7 @@ def loadImages(imgRefs, imgPositions, screenWidth):
     return scaleFactor, images
 
 
-def createFrame(images, screenWidth, screenHeight):
+def createFrame(images, consolePrintedLines, screenWidth, screenHeight):
     # Evil computer image dictates frame size
     frame = pygame.Surface((images["evilComputer"].surface.get_width(), images["evilComputer"].surface.get_height()))
     frame.fill("black")
@@ -154,6 +189,10 @@ def createFrame(images, screenWidth, screenHeight):
     for img in images:
         if not images[img].isAttachedToCursor() and images[img].position is not None:
             frame.blit(images[img].surface, images[img].position)
+    # Blit text surface
+    for i in range(len(consolePrintedLines)):
+        if consolePrintedLines[i] is not None:
+            frame.blit(consolePrintedLines[i], (670, 135 + i * 20))
     # Scale frame
     scaledFrame = pygame.transform.scale(frame, (screenWidth, screenHeight))
     # Blit image(s) attached to cursor (need to be post scaling)
@@ -197,6 +236,16 @@ def loadSounds(soundData, volume=1.0):
         newSound.set_volume(volume)
         sounds.append(newSound)
     return sounds
+
+
+# Treat
+def addConsolePrintedLine(consolePrintedLines, font, text):
+    # Render new line
+    line = font.render(text, True, "black")
+    # Drop the oldest line
+    consolePrintedLines.pop(0)
+    # Append new line to list
+    consolePrintedLines.append(line)
 
 
 # Call to main
