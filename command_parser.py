@@ -7,6 +7,8 @@ from help_command import *
 from connect_command import *
 from disconnect_command import *
 from passthrough_command import *
+from sms_all_command import *
+from get_players_command import *
 
 general_parser = argparse.ArgumentParser(description="general")
 general_parser.add_argument('command', type = str, help='')

@@ -6,10 +6,19 @@ import json
 HEADER_BYTES = 64
 PORT = 5051
 FORMAT = 'utf-8'
-GET_ACTIVE_CLIENTS_PARCEL = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL!"
+DELIMINATOR = ";" # MUST NEVER OCCUR IN THE DATA
+
+# SERVER REQUESTS
+GET_ACTIVE_CLIENTS = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL!" + DELIMINATOR
+GET_ACTIVE_CLIENTS_RESPONSE = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL_RESPONSE!"
 EMPTY_PARCEL = "!NETWORK_TRANSPORT_EMPTY_PARCEL!"
 NEXT_PARCEL = "!NETWORK_TRANSPORT_SEND_NEXT_PARCEL!"
 DISCONNECT_MESSAGE = "!NETWORK_TRANSPORT_DISCONNECTED!" # Payload has a very low chance to look like this
+
+# CLIENT REQUESTS
+GET_CLIENT_NAME = "GET_CLIENT_NAME" + DELIMINATOR
+GET_CLIENT_NAME_RESPONSE = "GET_CLIENT_NAME_RESPONSE" + DELIMINATOR
+SMS_MSG = "CLIENT_SMS" + DELIMINATOR
 
 class MailParcel:
     def __init__(self, from_address, to_address, message):
@@ -179,8 +188,8 @@ class ServerTransport:
                     if next_parcel_for_client.message != EMPTY_PARCEL:
                         print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
                     send_proto(conn, next_parcel_for_client)
-                elif GET_ACTIVE_CLIENTS_PARCEL == client_message_parcel.message:
-                    self.send_to_client(self.address, addr, str(self.__get_active_clients()))
+                elif GET_ACTIVE_CLIENTS == client_message_parcel.message:
+                    self.send_to_client(self.address, addr, GET_ACTIVE_CLIENTS_RESPONSE + str(self.__get_active_clients()))
 
                 print(f"[{addr}] {client_message}")
 

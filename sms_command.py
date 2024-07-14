@@ -1,4 +1,5 @@
 from command_parser import *
+from client_utils import *
 
 # Create a command to key off of
 SMS_COMMAND = '/msg'
@@ -19,5 +20,11 @@ def handle_sms(client_transport, input_args):
 
     # Do whatever
     print(f"Sending SMS to {arguments.to}: {arguments.message}")
+
+    try:
+        to_client_ip = OTHER_CLIENT_NAME_TO_IP[arguments.to]
+    except:
+        print(f"Unknown Name {arguments.to}")
+        return
     
-    client_transport.send_parcel(arguments.to, arguments.message)
+    client_transport.send_parcel(to_client_ip, SMS_MSG + arguments.message)
