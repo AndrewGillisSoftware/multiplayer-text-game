@@ -3,21 +3,33 @@ from gameStructures import *
 import pygame
 
 aspectRatio = (16, 9)
+# scaleFactor = (images["evilComputer"].surface.get_width(), images["evilComputer"].surface.get_height())
+
+class ImageData:
+    def __init__(self, surface, position):
+        self.surface = surface
+        self.position = position
+
+    def getPositionedRect(self):
+        return self.surface.get_rect(topleft=self.position)
+
 
 imageRefs = {
-    "evilComputer": "Main_Screen_with_Mirror_Test3.png"   # 16:9
+    "evilComputer": "Main_Screen_Final.png",   # 16:9
+    "quitButton"  : "quitButton.png",
+    "cursor"      : "Quillnoink.png"
 }
 
 
 def main():
+    # Initialize Pygame
+    pygame.init()
+
     # Prepare Assets
     images = loadImages()
     #images["evilComputer"] = pygame.transform.scale(images["evilComputer"], (840, 1008))
     #images["evilComputer"] = pygame.transform.scale(images["evilComputer"], (2560, 1440))
     #font = pygame.font.Font(None, 24)
-
-    # Initialize Pygame
-    pygame.init()
 
     # Screen Size:
     infoObject = pygame.display.Info()
@@ -32,9 +44,10 @@ def main():
 
     while running:
         # poll for events
-        # pygame.QUIT event means the user clicked X to close your window
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            # pygame.QUIT event means the user clicked X to close your window
+            if event.type == pygame.QUIT or \
+                (event.type == pygame.MOUSEBUTTONDOWN and images["quitButton"].getPositionedRect().collidepoint(event.pos)):
                 running = False
 
         # Update screenSurface content and scale screenSufrace to resolution
@@ -53,20 +66,33 @@ def main():
 
 
 def loadImages():
-    images = {}
+    imageSurfaces = {}
+    imagePositions = {}
     for ref in imageRefs:
-        images[ref] = pygame.image.load(imageRefs[ref])
+        imageSurfaces[ref] = pygame.image.load(imageRefs[ref])
+        imagePositions[ref] = None
+    # Specific image positions here
+    imagePositions["evilComputer"] = (0, 0)
+    imagePositions["quitButton"] = (imageSurfaces["evilComputer"].get_width() - imageSurfaces["quitButton"].get_width(), 0)
+    imagePositions["cursor"] = None
+    # Place into class
+    images = {}
+    for img in imageSurfaces:
+        images[img] = ImageData(imageSurfaces[img], imagePositions[img])
     return images
 
-def createFrame(images):
-    # Fill the screen with a color to wipe away anything from last frame
-    frame = pygame.Surface((images["evilComputer"].get_width(), images["evilComputer"].get_height()))
-    frame.fill("black")
-    frame.blit(images["evilComputer"], (0, 0))
 
-    # Quit button
-    # quitButtonRect = pygame.Rect()
+def createFrame(images):
+    # Evil computer image dictates frame size
+    frame = pygame.Surface((images["evilComputer"].surface.get_width(), images["evilComputer"].surface.get_height()))
+    frame.fill("black")
+    # Blit fixed position images
+    for img in images:
+        if images[img].position is not None:
+            frame.blit(images[img].surface, images[img].position)
+    # Blit cursor
     return frame
+
 
 # Call to main
 main()

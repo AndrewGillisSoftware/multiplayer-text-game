@@ -1,0 +1,7 @@
+Builders - add one with possible s at the end,@,1#3,1#2#3,#2#3,1#2#,1&,1$3,1$2$3,$2$3,1$2$,1$,$3 ,,,,,,,,,
+Vowel (no y),#,a,e,i,o,u,,,,,,,,,,,,,,,
+Vowel (possible y),&,a,e,i,o,u,y,,,,,,,,,,,,,,
+Double vowels,$,a(eiouy),e(aeiouy),i(aeouy),o(aeiouy),u(aeioy),y(aeiou),,,,,,,,,,,,,,
+1 helper (Followed by vowel),1,B(lrwz),C(h[hr]lrw),D(jlrvw),F(jlrw),G(hlrw),H,J,K(lrw),L,M,N,P(hlrw),Qu,R,S(1[hr][hm][hn][hl]),T([ch]hjlrvwz),V(lrw),,(e)X,Z(l)
+2 helper (Preceeded and followed by vowel),2,B(lrsvwz),C(h[hr]klrstw),D(bfgjklmnprs[th]vwz),F(dlks[sl][st][sh][sp]t[th]),G(bdglrs[sl][st][sh][sp]w[th]),H,J(r),K(lrsw),L(b[bl][bm][bn][br][bs][bw]c[ch][chr][cl][cn][cr]d[dr]f[fl][fr]g[gb][gd][gl][gm][gn][gr]k[kl][kn][kr]lmnp[pl][pr]t[th][tr][st][sh][shl][shr][sp][spl][spr]vwz),M(bdfgps[st][sh][sp]t[th]w)(rl),N(c[ch]dfg[gl][gth][gs]jkps[st][sh][sp]t[th])(rl),P(dfghklmnprs[sl][st][sh][sp]t[th]vwz),Qu,R(bc[ch]dfgjklmnprs[sl][st][sh]t[th]vxz),S(b[br][bl][bv][bw]c[ch][chr][cl][cr][cw]d[dr][dv][dw]f[fl]g[gl][gr][gw][hr][hm][hn][hl]k[kl][kr][kw]lmnp[ph][pl][pr][pw]qrt[tf][tk][tl][tm][tn][tp][tr][tv][tw]v[vl][vr]w),T(c[ch]hjklrs[sl][st][sh]tvwz),V(gklmnprstw),W(c[ch]bdfgklmnpr[st][sh][sp]t[th]z),X(lp[pl][pr]t[tr]x),Z(bdfgklmnpqrt[th]z)
+3 helper (Preceeded by vowel),3,B,C(hkt),D([th]),F(dlkt[th]),G,J,K,L(bc[ch]dfgkmnpt[th][st][sh][sp]z),M(bdfp[st][sh][sp]t[th]),N(c[ch]dfgjkp[st][sh][sp]t[th]),P(dfhkpt[th]z),Q,R(bcdfgjklmnprt[th]vxz),S(bdfgh[ht]kpqst[th]),T([ch]htz),V(klt),W(bdfgklmnpr[st][sh][sp]t[th]z),X(lpt[th]x),Z(bdfgklmnpt[th]z),
