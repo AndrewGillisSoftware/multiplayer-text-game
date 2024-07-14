@@ -12,9 +12,9 @@ def handle_disconnect(client_transport, input_args):
     try:
         arguments = disconnect_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments")
+        print_all(f"Error parsing arguments")
         return
 
     # Do whatever
-    print("Disconnecting")
+    print_all("Disconnecting")
     client_transport.disconnect()

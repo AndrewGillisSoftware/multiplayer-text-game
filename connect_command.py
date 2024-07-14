@@ -13,10 +13,10 @@ def handle_connect(client_transport, input_args):
     try:
         arguments = connect_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments")
+        print_all(f"Error parsing arguments")
         return
 
     # Do whatever
-    print(f"Connecting to {arguments.host}!")
+    print_all(f"Connecting to {arguments.host}!")
     
     client_transport.connect(arguments.host)

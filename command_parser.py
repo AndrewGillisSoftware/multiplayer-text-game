@@ -1,3 +1,4 @@
+from printable import *
 import sys
 import argparse
 import shlex
@@ -25,11 +26,11 @@ def parse(client, raw_command):
     try:
         general_args, _ = general_parser.parse_known_args(input_args)
     except argparse.ArgumentError as e:
-        print(f"Error parsing arguments: {e}")
+        print_all(f"Error parsing arguments: {e}")
         return
     
     # Call Command handler
     try:
         command_handlers[general_args.command](client, input_args)
     except KeyError:
-        print("Invalid command. try /help")
+        print_all("Invalid command. try /help")

@@ -1,11 +1,8 @@
-
+from connector import *
 from gameStructures import *
+from client import *
 import pygame
 import random
-
-# Global interfaces
-linesToPrint = []
-commandQueue = []
 
 class ImageData:
     def __init__(self, surface, position, scaleFactor):
@@ -79,6 +76,10 @@ soundRefs = {
 
 
 def main():
+    # Start Backend
+    client_thread = threading.Thread(target=start_client, args=())
+    client_thread.start()
+
     # Initialize Pygame
     pygame.init()
     pygame.mixer.init()  # for sounds
@@ -270,17 +271,3 @@ def addConsolePrintedLine(consolePrintedLines, font, text):
     consolePrintedLines.pop(0)
     # Append new line to list
     consolePrintedLines.append(line)
-
-
-# From gregtech backend
-def printToConsole(text):
-    linesToPrint.append(text)
-
-
-# To gregtech backend
-def appendScrollCommand(text):
-    commandQueue.append(text)
-
-
-# Call to main
-main()
