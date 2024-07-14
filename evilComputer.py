@@ -49,11 +49,15 @@ imageRefs = {
     "evilComputer": "Main_Screen_Final.png",   # 16:9
     "quill"       : "Quillnoink.png",
     "evilGoblin"  : "evilGoblin.png",
+    "pencilCup"   : "pencilCup.png",
+    "dragon"      : "dragon.png"
 }
 initImagePositions = {
     "evilComputer": (0, 0),
     "quill"       : (1272,805),
     "evilGoblin"  : (0,1050),
+    "pencilCup"   : (550, 650),
+    "dragon"      : (0, 160)
 }
 selectionZoneSetupData = {
     "inkwell" : (1262,950,62,53),
