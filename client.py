@@ -7,7 +7,7 @@ import time
 
 #SERVER = "127.0.0.1"
 
-ct = None
+ct = ClientTransport(None)
 
 def handle_server_mail(mail:MailParcel):
     # Server to Client Communication: Should be used rarely. Client 0 is source of truth
@@ -82,10 +82,7 @@ def check_for_mail(ct):
                 handle_client_to_client_mail(parcel)
                 #print(parcel)
 
-
 def start_client():
-    ct = ClientTransport(None)
-
     # Start Checking for mail
     check_for_mail_thread = threading.Thread(target=check_for_mail, args=(ct,))
     check_for_mail_thread.start()
