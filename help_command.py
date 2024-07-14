@@ -12,8 +12,8 @@ def handle_help(client_transport, input_args):
     try:
         arguments = help_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments")
+        print_all(f"Error parsing arguments")
         return
 
     # Do whatever
-    print("Get yo own help")
+    print_all("Get yo own help")

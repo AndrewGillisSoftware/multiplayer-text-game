@@ -1,11 +1,13 @@
-from client_utils import *
+from connector import *
 from comm_utils import *
+from client_utils import *
 from init_commands import *
+from evilComputer import *
 import time
 
 #SERVER = "127.0.0.1"
 
-ct = ClientTransport(None)
+ct = None
 
 def handle_server_mail(mail:MailParcel):
     # Server to Client Communication: Should be used rarely. Client 0 is source of truth
@@ -42,7 +44,7 @@ def handle_client_to_client_mail(mail:MailParcel):
             OTHER_CLIENT_NAME_TO_IP[mail_response] = mail.from_address
             #print(OTHER_CLIENT_NAME_TO_IP)
         elif mail_command == SMS_MSG:
-            print(f"SMS:{get_other_client_name(mail.from_address)}: {mail.message}")
+            print_all(f"SMS:{get_other_client_name(mail.from_address)}: {mail.message}")
         
         else:
             "Unknown client mail command"
@@ -81,13 +83,17 @@ def check_for_mail(ct):
                 #print(parcel)
 
 
-# Start Checking for mail
-check_for_mail_thread = threading.Thread(target=check_for_mail, args=(ct,))
-check_for_mail_thread.start()
+def start_client():
+    ct = ClientTransport(None)
 
-discover_other_clients_thread = threading.Thread(target=discover_other_clients, args=(ct,))
-discover_other_clients_thread.start()
+    # Start Checking for mail
+    check_for_mail_thread = threading.Thread(target=check_for_mail, args=(ct,))
+    check_for_mail_thread.start()
 
-while True:
-    user_input = input("Enter Command: ")
-    parse(ct, user_input)
+    discover_other_clients_thread = threading.Thread(target=discover_other_clients, args=(ct,))
+    discover_other_clients_thread.start()
+
+    while True:
+        if len(commandQueue) != 0:
+            command = commandQueue.pop(0)
+            parse(ct, command)

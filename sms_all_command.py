@@ -14,11 +14,11 @@ def handle_sms_all(client_transport, input_args):
     try:
         arguments = sms_all_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments")
+        print_all(f"Error parsing arguments")
         return
 
     # Do whatever
-    print(f"Sending SMS to Everyone: {arguments.message}")
+    print_all(f"Sending SMS to Everyone: {arguments.message}")
     
     for ip in OTHER_CLIENT_IPS:
         client_transport.send_parcel(SMS_MSG, ip, arguments.message)

@@ -15,10 +15,10 @@ def handle_passthrough(client_transport, input_args):
     try:
         arguments = passthrough_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments: {sys.exc_info()[0]}")
+        print_all(f"Error parsing arguments: {sys.exc_info()[0]}")
         return
 
     # Do whatever
-    print(f"Sending Passthrough to {arguments.to}: {arguments.message} with purpose: {arguments.purpose}")
+    print_all(f"Sending Passthrough to {arguments.to}: {arguments.message} with purpose: {arguments.purpose}")
     
     client_transport.send_parcel(arguments.purpose, arguments.to, arguments.message)

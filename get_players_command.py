@@ -13,7 +13,7 @@ def handle_get_players(client_transport, input_args):
     try:
         arguments = get_players_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments")
+        print_all(f"Error parsing arguments")
         return
 
-    print(str(OTHER_CLIENT_NAME_TO_IP))
+    print_all(str(OTHER_CLIENT_NAME_TO_IP))

@@ -15,16 +15,16 @@ def handle_sms(client_transport, input_args):
     try:
         arguments = sms_parser.parse_args(input_args)
     except:
-        print(f"Error parsing arguments")
+        print_all(f"Error parsing arguments")
         return
 
     # Do whatever
-    print(f"Sending SMS to {arguments.to}: {arguments.message}")
+    print_all(f"Sending SMS to {arguments.to}: {arguments.message}")
 
     try:
         to_client_ip = OTHER_CLIENT_NAME_TO_IP[arguments.to]
     except:
-        print(f"Unknown Name {arguments.to}")
+        print_all(f"Unknown Name {arguments.to}")
         return
     
     client_transport.send_parcel(SMS_MSG, to_client_ip, arguments.message)
