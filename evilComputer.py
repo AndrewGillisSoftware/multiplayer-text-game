@@ -43,7 +43,7 @@ class SelectionZone:
         return scaledRect
 
 
-fontRef = "Kingthings_Trypewriter_2.ttf"
+fontRef = "Beyond_Wonderland.ttf"
 imageRefs = {
     "evilComputer": "Main_Screen_Final.png",   # 16:9
     "quill"       : "Quillnoink.png",
@@ -94,8 +94,8 @@ def main():
     scaleFactor, images = loadImages(imageRefs, initImagePositions, screenWidth)
     selectionZones = createSelectionZones(selectionZoneSetupData, scaleFactor)
     sounds = loadSounds(soundRefs, volume=0.5)
-    #font = pygame.font.Font(fontRef)
-    font = pygame.font.SysFont("Consolas", 18, bold=True)
+    scrollFont = pygame.font.Font(fontRef, 27)
+    consoleFont = pygame.font.SysFont("Consolas", 18, bold=True)
 
     # Setup Cursor
     pygame.mouse.set_visible(True)
@@ -108,12 +108,20 @@ def main():
 
     # Console Setup
     consoleLineCount = 23
-    consoleLineLength = 50
+    consoleLineLength = 45
     scrollEditString = ""
     scrollEditSurface = None
     consolePrintedLines = []
     for i in range(consoleLineCount):
         consolePrintedLines.append(None)
+
+    # Typing Setup - values will be in milliseconds
+    backspaceKeyHeld = False
+    continuousBackspace = False
+    backspaceKeyHeldStartTime = 0
+    continuousBackspaceStartDelay = 100
+    continuousBackspaceCooldown = 10
+    continuousBackspaceLatestTime = 0
 
     # Game State
     quillHeld = False
@@ -139,6 +147,8 @@ def main():
                     sounds[random.randrange(0, len(sounds) - 1)].play()
             elif event.type == pygame.KEYDOWN and quillHeld:
                 if event.key == pygame.K_BACKSPACE:
+                    backspaceKeyHeld = True
+                    backspaceKeyHeldStartTime = pygame.time.get_ticks()
                     scrollEditString = scrollEditString[:-1]  # Remove last character on backspace
                 elif event.key == pygame.K_RETURN:
                     appendScrollCommand(scrollEditString)
@@ -146,11 +156,27 @@ def main():
                     scrollEditString = ""
                 elif len(scrollEditString) <= consoleLineLength:
                     scrollEditString += event.unicode  # Add the pressed key to the string
-                scrollEditSurface = font.render(scrollEditString, True, "black")
+                scrollEditSurface = scrollFont.render(scrollEditString, True, "black")
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_BACKSPACE:
+                    backspaceKeyHeld = False
+                    continuousBackspace = False
+
+        # backspace goodener
+        if backspaceKeyHeld:
+            if not continuousBackspace and pygame.time.get_ticks() - backspaceKeyHeldStartTime > continuousBackspaceStartDelay:
+                continuousBackspace = True
+                continuousBackspaceLastTimestamp = pygame.time.get_ticks()
+                scrollEditString = scrollEditString[:-1]  # Remove last character on backspace
+                scrollEditSurface = scrollFont.render(scrollEditString, True, "black")
+            elif continuousBackspace and pygame.time.get_ticks() - continuousBackspaceLatestTime > continuousBackspaceCooldown:
+                continuousBackspaceLatestTime = pygame.time.get_ticks()
+                scrollEditString = scrollEditString[:-1]  # Remove last character on backspace
+                scrollEditSurface = scrollFont.render(scrollEditString, True, "black")
 
         # Look for new console outputs
         while len(linesToPrint) != 0:
-            addConsolePrintedLine(consolePrintedLines, font, linesToPrint.pop(0))
+            addConsolePrintedLine(consolePrintedLines, consoleFont, linesToPrint.pop(0))
 
         # Display update
         frame = createFrame(images, consolePrintedLines, scrollEditSurface, screenWidth, screenHeight)
@@ -194,7 +220,7 @@ def createFrame(images, consolePrintedLines, scrollTextSurface, screenWidth, scr
             frame.blit(consolePrintedLines[i], (670, 135 + i * 20))
     # Blit editable scroll string
     if scrollTextSurface is not None:
-        frame.blit(scrollTextSurface, (750, 900))
+        frame.blit(scrollTextSurface, (725, 870))
     # Scale frame
     scaledFrame = pygame.transform.scale(frame, (screenWidth, screenHeight))
     # Blit image(s) attached to cursor (need to be post scaling)
@@ -240,7 +266,6 @@ def loadSounds(soundData, volume=1.0):
     return sounds
 
 
-# Treat
 def addConsolePrintedLine(consolePrintedLines, font, text):
     # Render new line
     line = font.render(text, True, "black")
