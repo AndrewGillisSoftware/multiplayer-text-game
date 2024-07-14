@@ -6,7 +6,9 @@ import json
 HEADER_BYTES = 64
 PORT = 5051
 FORMAT = 'utf-8'
-EMPTY_PARCEL = "!NETWORK_TRANSPORT_EMPTY!"
+GET_ACTIVE_CLIENTS_PARCEL = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL!"
+EMPTY_PARCEL = "!NETWORK_TRANSPORT_EMPTY_PARCEL!"
+NEXT_PARCEL = "!NETWORK_TRANSPORT_SEND_NEXT_PARCEL!"
 DISCONNECT_MESSAGE = "!NETWORK_TRANSPORT_DISCONNECTED!" # Payload has a very low chance to look like this
 
 class MailParcel:
@@ -29,7 +31,7 @@ class MailParcel:
         return cls(**data)
 
     def __repr__(self):
-        return json.dumps(self.to_dict()) #f"MailParcel(from_address={self.from_address}, to_address={self.to_address}, message={self.message})"
+        return json.dumps(self.to_dict())
 
 class MailBox:
     box = []
@@ -79,27 +81,36 @@ def recv_proto(conn) -> str:
 
 class ClientTransport:
     def __init__(self, handle_server):
+        self.connected = False
         self.server_address = None
         self.client_address = socket.gethostbyname(socket.gethostname())
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client = None
         return
     
     def connect(self, server_address):
         self.server_address = server_address
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((server_address, PORT))
+        self.connected = True
         return
 
     # If IP is server the message is for the server
-    def send_parcel_and_get_response(self, to_address, string_message) -> MailParcel:
+    def send_parcel(self, to_address, string_message) -> MailParcel:
         # Create Parcel
         parcel = MailParcel(self.client_address, to_address, string_message)
-
+        send_proto(self.client, parcel)
+        return
+    
+    def get_next_parcel(self) -> MailParcel:
+        # Create Parcel
+        parcel = MailParcel(self.client_address, self.server_address, NEXT_PARCEL)
         send_proto(self.client, parcel)
 
-        return recv_proto(self.client)
+        return MailParcel.from_dict(json.loads(recv_proto(self.client)))
 
     def disconnect(self):
-        self.send_parcel_and_get_response(self.server_address, DISCONNECT_MESSAGE)
+        self.send_parcel(self.server_address, DISCONNECT_MESSAGE)
+        self.connect = False
         return
 
 class ServerTransport:
@@ -136,6 +147,12 @@ class ServerTransport:
         if box:
             self.mail_boxes.remove(box)
         return
+    
+    def __get_active_clients(self):
+        client_ips = []
+        for box in self.mail_boxes:
+            client_ips.append(box.address)
+        return client_ips
 
     def __handle_client_proto(self, conn, addr):
         print(f"[NEW CONNECTION] {addr} connected.")
@@ -150,23 +167,30 @@ class ServerTransport:
             # Client Sent a Message
             if client_message:
                 client_message_parcel = MailParcel.from_dict(json.loads(client_message))
+
                 if DISCONNECT_MESSAGE == client_message_parcel.message:
+                    print(f"[DISCONNECTED] {addr}")
                     connected = False
+                    break
+                elif NEXT_PARCEL == client_message_parcel.message:
+                    # Send Client its mail if requested
+                    box = self.__get_mailbox(addr)
+                    next_parcel_for_client = box.get_next_parcel()
+                    if next_parcel_for_client.message != EMPTY_PARCEL:
+                        print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
+                    send_proto(conn, next_parcel_for_client)
+                elif GET_ACTIVE_CLIENTS_PARCEL == client_message_parcel.message:
+                    self.send_to_client(self.address, addr, str(self.__get_active_clients()))
 
                 print(f"[{addr}] {client_message}")
 
                 # Server reacts to client
                 if self.handle_client != None:
                     self.handle_client(client_message)
-            
-            # Send Client its mail
-            box = self.__get_mailbox(addr)
-            next_parcel_for_client = box.get_next_parcel()
-            print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
-            send_proto(conn, next_parcel_for_client)
         
         self.__deregister_client(addr)
         conn.close()
+        print(f"[CLOSED / DEREGISTERED] {addr}")
 
     def start(self):
         print("[STARTING] server is starting...")
@@ -181,4 +205,6 @@ class ServerTransport:
     
     def send_to_client(self, from_address, to_address, msg):
         mail = MailParcel(from_address, to_address, msg)
-        self.client_mailbox_queue.append(mail)
+        box = self.__get_mailbox(to_address)
+        box.add_parcel(mail)
+        return
