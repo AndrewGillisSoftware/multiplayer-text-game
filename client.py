@@ -21,7 +21,9 @@ def handle_server_mail(mail:MailParcel):
         if mail_command == GET_ACTIVE_CLIENTS_RESPONSE[:-1]:
             mail_response = segmented_message[1]
             OTHER_CLIENT_IPS.clear()
-            OTHER_CLIENT_IPS.extend(eval(mail_response))
+            ip_and_ids = eval(mail_response)
+            for ip, _ in ip_and_ids:
+                OTHER_CLIENT_IPS.append(ip)
             print(OTHER_CLIENT_IPS)
 
 def handle_client_to_client_mail(mail:MailParcel):
