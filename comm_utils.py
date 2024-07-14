@@ -220,5 +220,9 @@ class ServerTransport:
     def send_to_client(self, purpose, from_address, to_address, msg):
         mail = MailParcel(purpose, from_address, to_address, msg)
         box = self.__get_mailbox(to_address)
+
+        if not box:
+            return
+
         box.add_parcel(mail)
         return

@@ -42,7 +42,7 @@ def handle_client_to_client_mail(mail:MailParcel):
             OTHER_CLIENT_NAME_TO_IP[mail_response] = mail.from_address
             #print(OTHER_CLIENT_NAME_TO_IP)
         elif mail_command == SMS_MSG:
-            print(f"{get_other_client_name(mail.from_address)}: {mail.message}")
+            print(f"SMS:{get_other_client_name(mail.from_address)}: {mail.message}")
         
         else:
             "Unknown client mail command"
