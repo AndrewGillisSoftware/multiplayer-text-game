@@ -19,3 +19,5 @@ def handle_sms(client_transport, input_args):
 
     # Do whatever
     print(f"Sending SMS to {arguments.to}: {arguments.message}")
+    
+    client_transport.send_parcel(arguments.to, arguments.message)

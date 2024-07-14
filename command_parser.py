@@ -1,10 +1,11 @@
 import argparse
 import shlex
 
-from sms import *
-from help import *
-from connect import *
-from disconnect import *
+from sms_command import *
+from help_command import *
+from connect_command import *
+from disconnect_command import *
+from passthrough_command import *
 
 general_parser = argparse.ArgumentParser(description="general")
 general_parser.add_argument('command', type = str, help='')
