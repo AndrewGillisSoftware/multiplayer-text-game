@@ -13,8 +13,8 @@ sms_parser.add_argument('message', type=str, help = 'The message to send')
 def handle_sms(client_transport, input_args):
     try:
         arguments = sms_parser.parse_args(input_args)
-    except argparse.ArgumentTypeError as e:
-        print(f"Error parsing arguments: {e}")
+    except:
+        print(f"Error parsing arguments")
         return
 
     # Do whatever

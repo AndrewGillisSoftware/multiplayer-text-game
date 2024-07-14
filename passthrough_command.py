@@ -13,8 +13,8 @@ passthrough_parser.add_argument('message', type=str, help = 'The message to send
 def handle_passthrough(client_transport, input_args):
     try:
         arguments = passthrough_parser.parse_args(input_args)
-    except argparse.ArgumentTypeError as e:
-        print(f"Error parsing arguments: {e}")
+    except:
+        print(f"Error parsing arguments: {sys.exc_info()[0]}")
         return
 
     # Do whatever

@@ -11,8 +11,8 @@ help_parser.add_argument('command', type=str, help = 'Must be /help')
 def handle_help(client_transport, input_args):
     try:
         arguments = help_parser.parse_args(input_args)
-    except argparse.ArgumentTypeError as e:
-        print(f"Error parsing arguments: {e}")
+    except:
+        print(f"Error parsing arguments")
         return
 
     # Do whatever
