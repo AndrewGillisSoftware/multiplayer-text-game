@@ -10,35 +10,34 @@ ct = ClientTransport(None)
 def handle_server_mail(mail:MailParcel):
     # Server to Client Communication: Should be used rarely. Client 0 is source of truth
     if mail.from_address == ct.server_address:
-        if mail.message == EMPTY_PARCEL:
+        if mail.purpose == EMPTY_PARCEL:
             return
 
         # What is the server asking for
-        segmented_message = mail.message.split(DELIMINATOR)
-        mail_command = segmented_message[0]
+        mail_command = mail.purpose
 
         # Add list of IPS from the server to client information
-        if mail_command == GET_ACTIVE_CLIENTS_RESPONSE[:-1]:
-            mail_response = segmented_message[1]
+        if mail_command == GET_ACTIVE_CLIENTS_RESPONSE:
+            mail_response = mail.message
             OTHER_CLIENT_IPS.clear()
             OTHER_CLIENT_IPS.extend(eval(mail_response))
             print(OTHER_CLIENT_IPS)
 
 def handle_client_to_client_mail(mail:MailParcel):
     # Client to Client Communication: Prevent a Infinite Loop
-    if mail.to_address != mail.from_address:
+    if True: #mail.to_address != mail.from_address:
         # What is the client asking for
-        segmented_message = mail.message.split(DELIMINATOR)
-        mail_command = segmented_message[0]
+        mail_command = mail.purpose
 
         # Request from a client to get this clients name sent back to it
-        if mail_command == GET_CLIENT_NAME[:-1]:
+        print(mail_command)
+        if mail_command == GET_CLIENT_NAME:
             # Send Name to the requesting address
-            ct.send_parcel(mail.from_address, GET_CLIENT_NAME_RESPONSE + get_client_name())
+            ct.send_parcel(GET_CLIENT_NAME_RESPONSE, mail.from_address, get_client_name())
         
-        elif mail_command == GET_CLIENT_NAME_RESPONSE[:-1]:
+        elif mail_command == GET_CLIENT_NAME_RESPONSE:
             # We recieved a response from our name request assign them to our table of known users
-            mail_response = segmented_message[1]
+            mail_response = mail.message
             # Add to other clients
             OTHER_CLIENT_NAME_TO_IP[mail_response] = mail.from_address
             print(OTHER_CLIENT_NAME_TO_IP)
@@ -74,7 +73,7 @@ def check_for_mail(ct):
         time.sleep(0.5)
         if ct.connected:
             parcel = ct.get_next_parcel()
-            if parcel.message != EMPTY_PARCEL:
+            if parcel.purpose != EMPTY_PARCEL:
                 handle_server_mail(parcel)
                 handle_client_to_client_mail(parcel)
                 print(parcel)

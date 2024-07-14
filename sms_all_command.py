@@ -21,4 +21,4 @@ def handle_sms_all(client_transport, input_args):
     print(f"Sending SMS to Everyone: {arguments.message}")
     
     for ip in OTHER_CLIENT_IPS:
-        client_transport.send_parcel(ip, SMS_MSG + arguments.message)
+        client_transport.send_parcel(SMS_MSG, ip, arguments.message)

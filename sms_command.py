@@ -27,4 +27,4 @@ def handle_sms(client_transport, input_args):
         print(f"Unknown Name {arguments.to}")
         return
     
-    client_transport.send_parcel(to_client_ip, SMS_MSG + arguments.message)
+    client_transport.send_parcel(SMS_MSG, to_client_ip, arguments.message)

@@ -1,35 +1,36 @@
 import socket
 import threading
-import datetime
+import time
 import json
 
 HEADER_BYTES = 64
 PORT = 5051
 FORMAT = 'utf-8'
-DELIMINATOR = ";" # MUST NEVER OCCUR IN THE DATA
 
 # SERVER REQUESTS
-GET_ACTIVE_CLIENTS = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL!" + DELIMINATOR
-GET_ACTIVE_CLIENTS_RESPONSE = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL_RESPONSE!" + DELIMINATOR
+GET_ACTIVE_CLIENTS = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL!"
+GET_ACTIVE_CLIENTS_RESPONSE = "!NETWORK_TRANSPORT_GET_ACTIVE_CLIENTS_PARCEL_RESPONSE!"
 EMPTY_PARCEL = "!NETWORK_TRANSPORT_EMPTY_PARCEL!"
 NEXT_PARCEL = "!NETWORK_TRANSPORT_SEND_NEXT_PARCEL!"
 DISCONNECT_MESSAGE = "!NETWORK_TRANSPORT_DISCONNECTED!" # Payload has a very low chance to look like this
 
 # CLIENT REQUESTS
-GET_CLIENT_NAME = "GET_CLIENT_NAME" + DELIMINATOR
-GET_CLIENT_NAME_RESPONSE = "GET_CLIENT_NAME_RESPONSE" + DELIMINATOR
-SMS_MSG = "CLIENT_SMS" + DELIMINATOR
+GET_CLIENT_NAME = "GET_CLIENT_NAME"
+GET_CLIENT_NAME_RESPONSE = "GET_CLIENT_NAME_RESPONSE"
+SMS_MSG = "CLIENT_SMS"
 
 class MailParcel:
-    def __init__(self, from_address, to_address, message):
-        self.time_stamp = datetime.datetime.now()
+    def __init__(self, purpose, from_address, to_address, message, time_stamp=None):
+        self.purpose = purpose
+        self.time_stamp = time_stamp if time_stamp else str(time.time())
         self.from_address = from_address
         self.to_address = to_address
         self.message = message
-        return
     
     def to_dict(self):
         return {
+            'purpose' : self.purpose,
+            'time_stamp': self.time_stamp,
             'from_address': self.from_address,
             'to_address': self.to_address,
             'message': self.message
@@ -57,7 +58,7 @@ class MailBox:
     def get_next_parcel(self) -> MailParcel:
         if len(self.box) == 0:
             # Return Empty Parcel
-            return MailParcel(self.server_address, self.address, EMPTY_PARCEL)
+            return MailParcel(EMPTY_PARCEL, self.server_address, self.address, "")
 
         return self.box.pop()
     
@@ -104,15 +105,15 @@ class ClientTransport:
         return
 
     # If IP is server the message is for the server
-    def send_parcel(self, to_address, string_message) -> MailParcel:
+    def send_parcel(self, purpose, to_address, string_message) -> MailParcel:
         # Create Parcel
-        parcel = MailParcel(self.client_address, to_address, string_message)
+        parcel = MailParcel(purpose, self.client_address, to_address, string_message)
         send_proto(self.client, parcel)
         return
     
     def get_next_parcel(self) -> MailParcel:
         # Create Parcel
-        parcel = MailParcel(self.client_address, self.server_address, NEXT_PARCEL)
+        parcel = MailParcel(NEXT_PARCEL, self.client_address, self.server_address, "")
         send_proto(self.client, parcel)
 
         return MailParcel.from_dict(json.loads(recv_proto(self.client)))
@@ -176,22 +177,25 @@ class ServerTransport:
 
             # Client Sent a Message
             if client_message:
-                client_message_parcel = MailParcel.from_dict(json.loads(client_message))
+                client_message_parcel : MailParcel = MailParcel.from_dict(json.loads(client_message))
 
-                if DISCONNECT_MESSAGE == client_message_parcel.message:
+                if DISCONNECT_MESSAGE == client_message_parcel.purpose:
                     print(f"[DISCONNECTED] {addr}")
                     connected = False
                     break
-                elif NEXT_PARCEL == client_message_parcel.message:
+                elif NEXT_PARCEL == client_message_parcel.purpose:
                     # Send Client its mail if requested
                     box = self.__get_mailbox(client_address)
                     next_parcel_for_client = box.get_next_parcel()
-                    if next_parcel_for_client.message != EMPTY_PARCEL:
+                    if next_parcel_for_client.purpose != EMPTY_PARCEL:
                         print(f"[Sending Next Parcel of Mail to {client_address}] {next_parcel_for_client}")
                     send_proto(conn, next_parcel_for_client)
-                elif GET_ACTIVE_CLIENTS == client_message_parcel.message:
-                    self.send_to_client(self.address, client_address, GET_ACTIVE_CLIENTS_RESPONSE + str(self.__get_active_clients()))
-
+                elif GET_ACTIVE_CLIENTS == client_message_parcel.purpose:
+                    self.send_to_client(GET_ACTIVE_CLIENTS_RESPONSE, self.address, client_address, str(self.__get_active_clients()))
+                else:
+                    cmp = client_message_parcel
+                    self.send_to_client(cmp.purpose, cmp.from_address, cmp.to_address, cmp.message)
+                    
                 print(f"[{client_address}] {client_message}")
 
                 # Server reacts to client
@@ -213,8 +217,8 @@ class ServerTransport:
             thread.start()
             print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
     
-    def send_to_client(self, from_address, to_address, msg):
-        mail = MailParcel(from_address, to_address, msg)
+    def send_to_client(self, purpose, from_address, to_address, msg):
+        mail = MailParcel(purpose, from_address, to_address, msg)
         box = self.__get_mailbox(to_address)
         box.add_parcel(mail)
         return
