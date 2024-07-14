@@ -164,9 +164,10 @@ class ServerTransport:
         return client_ips
 
     def __handle_client_proto(self, conn, addr):
+        client_address = addr[0]
         print(f"[NEW CONNECTION] {addr} connected.")
 
-        self.__register_client(addr)
+        self.__register_client(client_address)
     
         connected = True
         while connected:
@@ -183,21 +184,21 @@ class ServerTransport:
                     break
                 elif NEXT_PARCEL == client_message_parcel.message:
                     # Send Client its mail if requested
-                    box = self.__get_mailbox(addr)
+                    box = self.__get_mailbox(client_address)
                     next_parcel_for_client = box.get_next_parcel()
                     if next_parcel_for_client.message != EMPTY_PARCEL:
-                        print(f"[Sending Next Parcel of Mail to {addr}] {next_parcel_for_client}")
+                        print(f"[Sending Next Parcel of Mail to {client_address}] {next_parcel_for_client}")
                     send_proto(conn, next_parcel_for_client)
                 elif GET_ACTIVE_CLIENTS == client_message_parcel.message:
-                    self.send_to_client(self.address, addr, GET_ACTIVE_CLIENTS_RESPONSE + str(self.__get_active_clients()))
+                    self.send_to_client(self.address, client_address, GET_ACTIVE_CLIENTS_RESPONSE + str(self.__get_active_clients()))
 
-                print(f"[{addr}] {client_message}")
+                print(f"[{client_address}] {client_message}")
 
                 # Server reacts to client
                 if self.handle_client != None:
                     self.handle_client(client_message)
         
-        self.__deregister_client(addr)
+        self.__deregister_client(client_address)
         conn.close()
         print(f"[CLOSED / DEREGISTERED] {addr}")
 
